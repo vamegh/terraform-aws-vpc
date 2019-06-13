@@ -79,8 +79,8 @@ variable "dhcp_options_netbios_node_type" {
 }
 
 variable "subnets" {
-  type = map(object({
-    availability_zone = map(string)
-  }))
+}
+
+variable "peers" {
 }
 

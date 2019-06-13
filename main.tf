@@ -43,6 +43,14 @@ locals {
       subnet["name"]
    ]))
 
+  peers = flatten([
+    for name in keys(var.peers) : [{
+      name = name
+      peer_vpc_id = var.peers[name].peer_vpc_id
+      peer_owner_id = var.peers[name].peer_owner_id
+      peer_region = lookup(var.peers[name], "peer_region", "eu-west-1")
+  }]])
+
 
   tags = merge(var.tags, {
     "name" = var.name
@@ -193,6 +201,7 @@ resource "aws_route_table" "private" {
   count  = var.enabled && length(local.private_subnets) > 0 ? length(local.public_subnets) : 0
 
   vpc_id = aws_vpc.main[0].id
+
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -520,3 +529,19 @@ resource "aws_redshift_subnet_group" "redshift" {
 
   tags = local.tags
 }
+
+resource "aws_vpc_peering_connection" "main" {
+  count         = var.enabled && length(local.peers) > 0 ? length(local.peers) : 0
+  vpc_id        = aws_vpc.main[0].id
+  peer_vpc_id   = local.peers[count.index].peer_vpc_id
+  peer_owner_id = local.peers[count.index].peer_owner_id
+  peer_region   = local.peers[count.index].peer_region
+  auto_accept   = false
+
+  tags = merge(local.tags,
+    map(
+      "name", local.peers[count.index].name
+    )
+  )
+}
+
