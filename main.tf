@@ -119,6 +119,48 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.main[0].id
   }
 
+   dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "gateway_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      gateway_id = route.value.gateway_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "instance_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      instance_id = route.value.instance_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "peering_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      vpc_peering_connection_id = route.value.peering_id
+    }
+  }
+
   tags = local.tags
 }
 
@@ -157,6 +199,49 @@ resource "aws_route_table" "private" {
     nat_gateway_id = aws_nat_gateway.main[count.index].id
   }
 
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "nat_gateway_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      nat_gateway_id = route.value.nat_gateway_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "instance_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      instance_id = route.value.instance_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "peering_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      vpc_peering_connection_id = route.value.peering_id
+    }
+  }
+
+
   tags = local.tags
 }
 
@@ -188,6 +273,20 @@ resource "aws_route_table" "internal" {
   count  = var.enabled && length(local.internal_subnets) > 0 ? length(local.internal_subnets) : 0
 
   vpc_id = aws_vpc.main[0].id
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "nat_gateway_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      nat_gateway_id = route.value.nat_gateway_id
+    }
+  }
 
   dynamic "route" {
     for_each = flatten([
@@ -254,6 +353,48 @@ resource "aws_route_table" "database" {
     nat_gateway_id = aws_nat_gateway.main[count.index].id
   }
 
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "nat_gateway_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      nat_gateway_id = route.value.nat_gateway_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "instance_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      instance_id = route.value.instance_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "peering_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      vpc_peering_connection_id = route.value.peering_id
+    }
+  }
+
   tags = local.tags
 }
 
@@ -299,6 +440,48 @@ resource "aws_route_table" "redshift" {
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.main[count.index].id
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "nat_gateway_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      nat_gateway_id = route.value.nat_gateway_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "instance_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      instance_id = route.value.instance_id
+    }
+  }
+
+  dynamic "route" {
+    for_each = flatten([
+      for subnet in local.internal_subnets : [
+        for route in subnet["routes"]  :
+          route if contains(keys(route), "peering_id")
+      ]
+    ])
+
+    content {
+      cidr_block = route.value.cidr_block
+      vpc_peering_connection_id = route.value.peering_id
+    }
   }
 
   tags = local.tags
