@@ -23,8 +23,8 @@ module "vpc" {
       name             = "private"
       type             = "private"
       tags             = {
-        "kubernetes.io/cluster/local.cluster_name" = "shared"
-        "kubernetes.io/role/internal-elb"          = "true"
+        "kubernetes.io/cluster/cluster_name" = "shared"
+        "kubernetes.io/role/internal-elb"    = "true"
       }
       availability_zone = {
         "eu-west-1a" = "10.0.1.0/24"
@@ -36,7 +36,7 @@ module "vpc" {
       name              = "public"
       type              = "public"
       tags              = {
-        "kubernetes.io/cluster/local.cluster_name" = "shared"
+        "kubernetes.io/cluster/cluster_name" = "shared"
       }
       availability_zone = {
         eu-west-1a = "10.0.4.0/24"
