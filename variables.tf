@@ -78,9 +78,20 @@ variable "dhcp_options_netbios_node_type" {
   default     = ""
 }
 
+variable "single_nat_gateway" {
+  type = bool
+  default = false
+}
+
 variable "subnets" {
 }
 
 variable "peers" {
+  type = list(object({
+    name          = string
+    peer_owner_id = string
+    peer_vpc_id   = string
+  }))
+  default = []
 }
 

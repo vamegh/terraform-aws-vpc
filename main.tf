@@ -3,17 +3,30 @@ terraform {
 }
 
 locals {
+//  subnets = flatten([
+//    for name in keys(var.subnets) : [
+//      for az in keys(var.subnets[name]["availability_zone"]) : [{
+//        name                    = name
+//        az                      = az
+//        cidr_block              = var.subnets[name]["availability_zone"][az]
+//        route_table_idx         = index(keys(var.subnets), name)
+//        type                    = lookup(var.subnets[name], "type", "private")
+//        tags                    = lookup(var.subnets[name], "tags", {})
+//        map_public_ip_on_launch = lookup(var.subnets[name], "map_public_ip_on_launch", "false")
+//        routes                  = lookup(var.subnets[name], "routes", [])
+//      }]
+//    ]
+//  ])
   subnets = flatten([
-    for name in keys(var.subnets) : [
-      for az in keys(var.subnets[name]["availability_zone"]) : [{
-        name                    = name
+    for subnet in var.subnets : [
+      for az in keys(subnet["availability_zone"]) : [{
+        name                    = subnet["name"]
+        type                    = lookup(subnet,"type", "private")
         az                      = az
-        cidr_block              = var.subnets[name]["availability_zone"][az]
-        route_table_idx         = index(keys(var.subnets), name)
-        type                    = lookup(var.subnets[name], "type", "private")
-        tags                    = lookup(var.subnets[name], "tags", {})
-        map_public_ip_on_launch = lookup(var.subnets[name], "map_public_ip_on_launch", "false")
-        routes                  = lookup(var.subnets[name], "routes", [])
+        cidr_block              = subnet["availability_zone"][az]
+        map_public_ip_on_launch = lookup(subnet, "map_public_ip_on_launch", "false")
+        tags                    = lookup(subnet, "tags", {})
+        routes                  = lookup(subnet, "routes", [])
       }]
     ]
   ])
@@ -43,18 +56,28 @@ locals {
       subnet["name"]
    ]))
 
-  peers = flatten([
-    for name in keys(var.peers) : [{
-      name = name
-      peer_vpc_id = var.peers[name].peer_vpc_id
-      peer_owner_id = var.peers[name].peer_owner_id
-      peer_region = lookup(var.peers[name], "peer_region", "eu-west-1")
-  }]])
+//  peers = flatten([
+//    for name in keys(var.peers) : [{
+//      name = name
+//      peer_vpc_id = var.peers[name].peer_vpc_id
+//      peer_owner_id = var.peers[name].peer_owner_id
+//      peer_region = lookup(var.peers[name], "peer_region", "eu-west-1")
+//  }]])
 
+  peers = flatten([
+    for peer in var.peers : [{
+      name = peer.name
+      peer_vpc_id = peer.peer_vpc_id
+      peer_owner_id = peer.peer_owner_id
+      peer_region = lookup(peer, "peer_region", "eu-west-1")
+    }]
+  ])
 
   tags = merge(var.tags, {
     "name" = var.name
   })
+
+  nat_gateway_count = var.single_nat_gateway ? 1 : length(local.public_subnets)
 }
 
 # VPC configuration
@@ -106,13 +129,13 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_eip" "main" {
-  count         = var.enabled && length(local.public_subnets) > 0  ? length(local.public_subnets) : 0
+  count         = var.enabled && length(local.public_subnets) > 0  ? local.nat_gateway_count : 0
 
   vpc = true
 }
 
 resource "aws_nat_gateway" "main" {
-  count         = var.enabled && length(local.public_subnets) > 0  ? length(local.public_subnets) : 0
+  count         = var.enabled && length(local.public_subnets) > 0  ? local.nat_gateway_count : 0
 
   allocation_id = aws_eip.main[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
@@ -198,19 +221,19 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route_table" "private" {
-  count  = var.enabled && length(local.private_subnets) > 0 ? length(local.public_subnets) : 0
+  count  = var.enabled && length(local.private_subnets) > 0 ? 1 : 0
 
   vpc_id = aws_vpc.main[0].id
 
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+    nat_gateway_id = aws_nat_gateway.main[0].id
   }
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.private_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "nat_gateway_id")
       ]
@@ -224,7 +247,7 @@ resource "aws_route_table" "private" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.private_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "instance_id")
       ]
@@ -238,7 +261,7 @@ resource "aws_route_table" "private" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.private_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "peering_id")
       ]
@@ -279,7 +302,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_route_table" "internal" {
-  count  = var.enabled && length(local.internal_subnets) > 0 ? length(local.internal_subnets) : 0
+  count  = var.enabled && length(local.internal_subnets) > 0 ? 1 : 0
 
   vpc_id = aws_vpc.main[0].id
 
@@ -353,18 +376,18 @@ resource "aws_route_table_association" "internal" {
 }
 
 resource "aws_route_table" "database" {
-  count  = var.enabled && length(local.database_subnets) > 0 ? length(local.public_subnets) : 0
+  count  = var.enabled && length(local.database_subnets) > 0 ? 1 : 0
 
   vpc_id = aws_vpc.main[0].id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+    nat_gateway_id = aws_nat_gateway.main[0].id
   }
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.database_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "nat_gateway_id")
       ]
@@ -378,7 +401,7 @@ resource "aws_route_table" "database" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.database_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "instance_id")
       ]
@@ -392,7 +415,7 @@ resource "aws_route_table" "database" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.database_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "peering_id")
       ]
@@ -442,18 +465,18 @@ resource "aws_db_subnet_group" "database" {
 }
 
 resource "aws_route_table" "redshift" {
-  count  = var.enabled && length(local.redshift_subnets) > 0 ? length(local.public_subnets) : 0
+  count  = var.enabled && length(local.redshift_subnets) > 0 ? 1 : 0
 
   vpc_id = aws_vpc.main[0].id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+    nat_gateway_id = aws_nat_gateway.main[0].id
   }
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.redshift_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "nat_gateway_id")
       ]
@@ -467,7 +490,7 @@ resource "aws_route_table" "redshift" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.redshift_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "instance_id")
       ]
@@ -481,7 +504,7 @@ resource "aws_route_table" "redshift" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.redshift_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "peering_id")
       ]
