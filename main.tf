@@ -3,20 +3,6 @@ terraform {
 }
 
 locals {
-//  subnets = flatten([
-//    for name in keys(var.subnets) : [
-//      for az in keys(var.subnets[name]["availability_zone"]) : [{
-//        name                    = name
-//        az                      = az
-//        cidr_block              = var.subnets[name]["availability_zone"][az]
-//        route_table_idx         = index(keys(var.subnets), name)
-//        type                    = lookup(var.subnets[name], "type", "private")
-//        tags                    = lookup(var.subnets[name], "tags", {})
-//        map_public_ip_on_launch = lookup(var.subnets[name], "map_public_ip_on_launch", "false")
-//        routes                  = lookup(var.subnets[name], "routes", [])
-//      }]
-//    ]
-//  ])
   subnets = flatten([
     for subnet in var.subnets : [
       for az in keys(subnet["availability_zone"]) : [{
@@ -55,14 +41,6 @@ locals {
     for subnet in local.subnets :
       subnet["name"]
    ]))
-
-//  peers = flatten([
-//    for name in keys(var.peers) : [{
-//      name = name
-//      peer_vpc_id = var.peers[name].peer_vpc_id
-//      peer_owner_id = var.peers[name].peer_owner_id
-//      peer_region = lookup(var.peers[name], "peer_region", "eu-west-1")
-//  }]])
 
   peers = flatten([
     for peer in var.peers : [{
