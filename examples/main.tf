@@ -22,14 +22,40 @@ module "vpc" {
     {
       name             = "private"
       type             = "private"
+
+      routes = [
+        {
+          cidr_block = "172.16.0.0/24"
+          instance_id = "instance-id"
+        }
+      ]
+
       tags             = {
         "kubernetes.io/cluster/cluster_name" = "shared"
         "kubernetes.io/role/internal-elb"    = "true"
       }
+
       availability_zone = {
         "eu-west-1a" = "10.0.1.0/24"
         "eu-west-1b" = "10.0.2.0/24"
         "eu-west-1c" = "10.0.3.0/24"
+      }
+    },
+    {
+      name             = "app"
+      type             = "private"
+
+      routes = [
+        {
+          cidr_block = "192.168.0.0/24"
+          peering_id = "pcx-123123123"
+        }
+      ]
+
+      availability_zone = {
+        "eu-west-1a" = "10.0.10.0/24"
+        "eu-west-1b" = "10.0.20.0/24"
+        "eu-west-1c" = "10.0.30.0/24"
       }
     },
     {

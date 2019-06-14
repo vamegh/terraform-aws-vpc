@@ -130,7 +130,7 @@ resource "aws_route_table" "public" {
 
    dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.public_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "gateway_id")
       ]
@@ -144,7 +144,7 @@ resource "aws_route_table" "public" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.public_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "instance_id")
       ]
@@ -158,7 +158,7 @@ resource "aws_route_table" "public" {
 
   dynamic "route" {
     for_each = flatten([
-      for subnet in local.internal_subnets : [
+      for subnet in local.public_subnets : [
         for route in subnet["routes"]  :
           route if contains(keys(route), "peering_id")
       ]
