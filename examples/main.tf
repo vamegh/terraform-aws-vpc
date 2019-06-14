@@ -14,6 +14,14 @@ module "vpc" {
 
   single_nat_gateway = true
 
+  peers = [
+    {
+      name          = "test-peering"
+      peer_vpc_id   = "vpc-123123"
+      peer_owner_id = "12341234123"
+    }
+  ]
+
   tags = {
     "kubernetes.io/cluster/cluster_name" = "shared"
   }
@@ -25,7 +33,7 @@ module "vpc" {
 
       routes = [
         {
-          cidr_block = "172.16.0.0/24"
+          cidr_block  = "172.16.0.0/24"
           instance_id = "instance-id"
         }
       ]
