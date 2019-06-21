@@ -56,10 +56,9 @@ locals {
 
   tags = merge(
     var.tags,
-    map(
-      "vpc", local.vpc_name
-    )
-  )
+    {
+      "Vpc" = local.vpc_name
+  })
 
 }
 
@@ -75,9 +74,9 @@ resource "aws_vpc" "main" {
   enable_classiclink_dns_support = var.enable_classiclink_dns_support
   tags = merge(
     local.tags,
-    map(
-      "Name", local.vpc_name
-    )
+    {
+      "Name" = local.vpc_name
+    }
   )
 }
 
@@ -99,9 +98,9 @@ resource "aws_vpc_dhcp_options" "main" {
   netbios_node_type    = var.dhcp_options_netbios_node_type
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-dhcp-options", var.name)
-    )
+    {
+      "Name" = format("%s-dhcp-options", var.name)
+    }
   )
 }
 
@@ -120,9 +119,9 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main[0].id
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-igw", var.name)
-    )
+    {
+      "Name" = format("%s-igw", var.name)
+    }
   )
 }
 
@@ -130,6 +129,13 @@ resource "aws_eip" "main" {
   count = var.enabled && length(local.public_subnets) > 0 ? local.nat_gateway_count : 0
 
   vpc = true
+
+  tags = merge(
+    var.tags,
+    {
+      "Name" = format("%s-eip", var.name)
+    }
+  )
 }
 
 resource "aws_nat_gateway" "main" {
@@ -140,10 +146,9 @@ resource "aws_nat_gateway" "main" {
 
   tags = merge(
     var.tags,
-    map(
-      "Name", format("%s-nat-gw", var.name),
-      "vpc", local.vpc_name
-    )
+    {
+      "Name" = format("%s-nat-gw", var.name)
+    }
   )
 }
 
@@ -200,9 +205,9 @@ resource "aws_route_table" "public" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-route-table-public", var.name)
-    )
+    {
+      "Name" = format("%s-route-table-public", var.name)
+    }
   )
 }
 
@@ -214,13 +219,13 @@ resource "aws_subnet" "public" {
   availability_zone       = local.public_subnets[count.index].az
   map_public_ip_on_launch = local.public_subnets[count.index].map_public_ip_on_launch
   tags = merge(merge(local.tags,
-    map(
-      "Name", format("%s-subnet-%s-%s", var.name, local.public_subnets[count.index].type, local.public_subnets[count.index].az),
-      "subnet", local.public_subnets[count.index].name,
-      "cidr_block", local.public_subnets[count.index].cidr_block,
-      "availability_zone", local.public_subnets[count.index].az,
-      "type", local.public_subnets[count.index].type
-    )
+    {
+      "Name"              = format("%s-subnet-%s-%s", var.name, local.public_subnets[count.index].type, local.public_subnets[count.index].az),
+      "Subnet"            = local.public_subnets[count.index].name,
+      "Cidr_block"        = local.public_subnets[count.index].cidr_block,
+      "Availability_zone" = local.public_subnets[count.index].az,
+      "Type"              = local.public_subnets[count.index].type
+    }
   ), local.public_subnets[count.index].tags)
 }
 
@@ -288,9 +293,9 @@ resource "aws_route_table" "private" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-route-table-private", var.name)
-    )
+    {
+      "Name" = format("%s-route-table-private", var.name)
+    }
   )
 }
 
@@ -302,13 +307,13 @@ resource "aws_subnet" "private" {
   availability_zone       = local.private_subnets[count.index].az
   map_public_ip_on_launch = false
   tags = merge(merge(local.tags,
-    map(
-      "Name", format("%s-subnet-%s-%s", var.name, local.private_subnets[count.index].type, local.private_subnets[count.index].az),
-      "subnet", local.private_subnets[count.index].name,
-      "cidr_block", local.private_subnets[count.index].cidr_block,
-      "availability_zone", local.private_subnets[count.index].az,
-      "type", local.private_subnets[count.index].type
-    )
+    {
+      "Name"              = format("%s-subnet-%s-%s", var.name, local.private_subnets[count.index].type, local.private_subnets[count.index].az),
+      "Subnet"            = local.private_subnets[count.index].name,
+      "Cidr_block"        = local.private_subnets[count.index].cidr_block,
+      "Availability_zone" = local.private_subnets[count.index].az,
+      "Type"              = local.private_subnets[count.index].type
+    }
   ), local.private_subnets[count.index].tags)
 }
 
@@ -368,9 +373,9 @@ resource "aws_route_table" "internal" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-route-table-internal", var.name)
-    )
+    {
+      "Name" = format("%s-route-table-internal", var.name)
+    }
   )
 }
 
@@ -382,13 +387,13 @@ resource "aws_subnet" "internal" {
   availability_zone       = local.internal_subnets[count.index].az
   map_public_ip_on_launch = false
   tags = merge(merge(local.tags,
-    map(
-      "Name", format("%s-subnet-%s-%s", var.name, local.internal_subnets[count.index].type, local.internal_subnets[count.index].az),
-      "subnet", local.internal_subnets[count.index].name,
-      "cidr_block", local.internal_subnets[count.index].cidr_block,
-      "availability_zone", local.internal_subnets[count.index].az,
-      "type", local.internal_subnets[count.index].type
-    )
+    {
+      "Name"              = format("%s-subnet-%s-%s", var.name, local.internal_subnets[count.index].type, local.internal_subnets[count.index].az),
+      "Subnet"            = local.internal_subnets[count.index].name,
+      "Cidr_block"        = local.internal_subnets[count.index].cidr_block,
+      "Availability_zone" = local.internal_subnets[count.index].az,
+      "Type"              = local.internal_subnets[count.index].type
+    }
   ), local.internal_subnets[count.index].tags)
 }
 
@@ -453,9 +458,9 @@ resource "aws_route_table" "database" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-route-table-database", var.name)
-    )
+    {
+      "Name" = format("%s-route-table-database", var.name)
+    }
   )
 }
 
@@ -467,13 +472,13 @@ resource "aws_subnet" "database" {
   availability_zone       = local.database_subnets[count.index].az
   map_public_ip_on_launch = false
   tags = merge(merge(local.tags,
-    map(
-      "Name", format("%s-subnet-%s-%s", var.name, local.database_subnets[count.index].type, local.database_subnets[count.index].az),
-      "subnet", local.database_subnets[count.index].name,
-      "cidr_block", local.database_subnets[count.index].cidr_block,
-      "availability_zone", local.database_subnets[count.index].az,
-      "type", local.database_subnets[count.index].type
-    )
+    {
+      "Name"              = format("%s-subnet-%s-%s", var.name, local.database_subnets[count.index].type, local.database_subnets[count.index].az),
+      "Subnet"            = local.database_subnets[count.index].name,
+      "Cidr_block"        = local.database_subnets[count.index].cidr_block,
+      "Availability_zone" = local.database_subnets[count.index].az,
+      "Type"              = local.database_subnets[count.index].type
+    }
   ), local.database_subnets[count.index].tags)
 }
 
@@ -493,9 +498,9 @@ resource "aws_db_subnet_group" "database" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-db-subnet-group-database", var.name)
-    )
+    {
+      "Name" = format("%s-db-subnet-group-database", var.name)
+    }
   )
 }
 
@@ -553,9 +558,9 @@ resource "aws_route_table" "redshift" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-route-table-redshift", var.name)
-    )
+    {
+      "Name" = format("%s-route-table-redshift", var.name)
+    }
   )
 }
 
@@ -567,13 +572,13 @@ resource "aws_subnet" "redshift" {
   availability_zone       = local.redshift_subnets[count.index].az
   map_public_ip_on_launch = false
   tags = merge(merge(local.tags,
-    map(
-      "Name", format("%s-subnet-%s-%s", var.name, local.redshift_subnets[count.index].type, local.redshift_subnets[count.index].az),
-      "subnet", local.redshift_subnets[count.index].name,
-      "cidr_block", local.redshift_subnets[count.index].cidr_block,
-      "availability_zone", local.redshift_subnets[count.index].az,
-      "type", local.redshift_subnets[count.index].type
-    )
+    {
+      "Name"              = format("%s-subnet-%s-%s", var.name, local.redshift_subnets[count.index].type, local.redshift_subnets[count.index].az),
+      "Subnet"            = local.redshift_subnets[count.index].name,
+      "Cidr_block"        = local.redshift_subnets[count.index].cidr_block,
+      "Availability_zone" = local.redshift_subnets[count.index].az,
+      "Type"              = local.redshift_subnets[count.index].type
+    }
   ), local.redshift_subnets[count.index].tags)
 }
 
@@ -593,9 +598,9 @@ resource "aws_redshift_subnet_group" "redshift" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", format("%s-db-subnet-group-redshift", var.name)
-    )
+    {
+      "Name" = format("%s-db-subnet-group-redshift", var.name)
+    }
   )
 }
 
@@ -608,9 +613,9 @@ resource "aws_vpc_peering_connection" "main" {
   auto_accept   = false
 
   tags = merge(local.tags,
-    map(
-      "Name", local.peers[count.index].name
-    )
+    {
+      "Name" = local.peers[count.index].name
+    }
   )
 }
 
