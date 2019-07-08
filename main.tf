@@ -65,7 +65,7 @@ locals {
 
 # VPC configuration
 resource "aws_vpc" "main" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled && var.vpc_id == "" ? 1 : 0
 
   cidr_block                     = cidrsubnet(var.cidr_block, 0, 0)
   instance_tenancy               = var.instance_tenancy
