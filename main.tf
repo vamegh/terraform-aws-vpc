@@ -53,6 +53,7 @@ locals {
   ])
 
   nat_gateway_count = var.single_nat_gateway ? 1 : length(local.public_subnets)
+  vpc_id            = var.vpc_id != "" ? var.vpc_id : aws_vpc.main[0].id
 
   tags = merge(
     var.tags,
@@ -83,7 +84,7 @@ resource "aws_vpc" "main" {
 resource "aws_vpc_ipv4_cidr_block_association" "main" {
   count = var.enabled && length(var.secondary_cidr) > 0 ? length(var.secondary_cidr) : 0
 
-  vpc_id     = aws_vpc.main[0].id
+  vpc_id     = local.vpc_id
   cidr_block = var.secondary_cidr[count.index]
 }
 
@@ -107,7 +108,7 @@ resource "aws_vpc_dhcp_options" "main" {
 resource "aws_vpc_dhcp_options_association" "main" {
   count = var.enabled && var.enable_dhcp_options ? 1 : 0
 
-  vpc_id          = aws_vpc.main[0].id
+  vpc_id          = local.vpc_id
   dhcp_options_id = aws_vpc_dhcp_options.main[count.index].id
 }
 
@@ -116,7 +117,7 @@ resource "aws_vpc_dhcp_options_association" "main" {
 resource "aws_internet_gateway" "main" {
   count = var.enabled ? 1 : 0
 
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
   tags = merge(
     local.tags,
     {
@@ -154,7 +155,7 @@ resource "aws_nat_gateway" "main" {
 
 resource "aws_route_table" "public" {
   count  = var.enabled && length(local.public_subnets) > 0 ? 1 : 0
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -214,7 +215,7 @@ resource "aws_route_table" "public" {
 resource "aws_subnet" "public" {
   count = var.enabled && length(local.public_subnets) > 0 ? length(local.public_subnets) : 0
 
-  vpc_id                  = aws_vpc.main[0].id
+  vpc_id                  = local.vpc_id
   cidr_block              = cidrsubnet(local.public_subnets[count.index].cidr_block, 0, 0)
   availability_zone       = local.public_subnets[count.index].az
   map_public_ip_on_launch = local.public_subnets[count.index].map_public_ip_on_launch
@@ -240,7 +241,7 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   count = var.enabled && length(local.private_subnets) > 0 ? 1 : 0
 
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
 
 
   route {
@@ -302,7 +303,7 @@ resource "aws_route_table" "private" {
 resource "aws_subnet" "private" {
   count = var.enabled && length(local.private_subnets) > 0 ? length(local.private_subnets) : 0
 
-  vpc_id                  = aws_vpc.main[0].id
+  vpc_id                  = local.vpc_id
   cidr_block              = cidrsubnet(local.private_subnets[count.index].cidr_block, 0, 0)
   availability_zone       = local.private_subnets[count.index].az
   map_public_ip_on_launch = false
@@ -327,7 +328,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_route_table" "internal" {
   count = var.enabled && length(local.internal_subnets) > 0 ? 1 : 0
 
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
 
   dynamic "route" {
     for_each = flatten([
@@ -382,7 +383,7 @@ resource "aws_route_table" "internal" {
 resource "aws_subnet" "internal" {
   count = var.enabled && length(local.internal_subnets) > 0 ? length(local.internal_subnets) : 0
 
-  vpc_id                  = aws_vpc.main[0].id
+  vpc_id                  = local.vpc_id
   cidr_block              = cidrsubnet(local.internal_subnets[count.index].cidr_block, 0, 0)
   availability_zone       = local.internal_subnets[count.index].az
   map_public_ip_on_launch = false
@@ -407,7 +408,7 @@ resource "aws_route_table_association" "internal" {
 resource "aws_route_table" "database" {
   count = var.enabled && length(local.database_subnets) > 0 ? 1 : 0
 
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -467,7 +468,7 @@ resource "aws_route_table" "database" {
 resource "aws_subnet" "database" {
   count = var.enabled && length(local.database_subnets) > 0 ? length(local.database_subnets) : 0
 
-  vpc_id                  = aws_vpc.main[0].id
+  vpc_id                  = local.vpc_id
   cidr_block              = cidrsubnet(local.database_subnets[count.index].cidr_block, 0, 0)
   availability_zone       = local.database_subnets[count.index].az
   map_public_ip_on_launch = false
@@ -507,7 +508,7 @@ resource "aws_db_subnet_group" "database" {
 resource "aws_route_table" "redshift" {
   count = var.enabled && length(local.redshift_subnets) > 0 ? 1 : 0
 
-  vpc_id = aws_vpc.main[0].id
+  vpc_id = local.vpc_id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -567,7 +568,7 @@ resource "aws_route_table" "redshift" {
 resource "aws_subnet" "redshift" {
   count = var.enabled && length(local.redshift_subnets) > 0 ? length(local.redshift_subnets) : 0
 
-  vpc_id                  = aws_vpc.main[0].id
+  vpc_id                  = local.vpc_id
   cidr_block              = cidrsubnet(local.redshift_subnets[count.index].cidr_block, 0, 0)
   availability_zone       = local.redshift_subnets[count.index].az
   map_public_ip_on_launch = false
@@ -606,7 +607,7 @@ resource "aws_redshift_subnet_group" "redshift" {
 
 resource "aws_vpc_peering_connection" "main" {
   count         = var.enabled && length(local.peers) > 0 ? length(local.peers) : 0
-  vpc_id        = aws_vpc.main[0].id
+  vpc_id        = local.vpc_id
   peer_vpc_id   = local.peers[count.index].peer_vpc_id
   peer_owner_id = local.peers[count.index].peer_owner_id
   peer_region   = local.peers[count.index].peer_region
