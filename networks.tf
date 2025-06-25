@@ -14,7 +14,7 @@ resource "aws_internet_gateway" "main" {
 resource "aws_eip" "main" {
   count = var.enabled && length(local.public_subnets) > 0 ? local.nat_gateway_count : 0
 
-  vpc = true
+  domain = "vpc"
 
   tags = merge(
     var.tags,

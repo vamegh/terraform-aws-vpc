@@ -2,12 +2,10 @@
 resource "aws_vpc" "main" {
   count = var.enabled && var.vpc_id == "" ? 1 : 0
 
-  cidr_block                     = cidrsubnet(var.cidr_block, 0, 0)
-  instance_tenancy               = var.instance_tenancy
-  enable_dns_support             = var.enable_dns_support
-  enable_dns_hostnames           = var.enable_dns_hostnames
-  enable_classiclink             = var.enable_classiclink
-  enable_classiclink_dns_support = var.enable_classiclink_dns_support
+  cidr_block           = cidrsubnet(var.cidr_block, 0, 0)
+  instance_tenancy     = var.instance_tenancy
+  enable_dns_support   = var.enable_dns_support
+  enable_dns_hostnames = var.enable_dns_hostnames
   tags = merge(
     local.tags,
     {
