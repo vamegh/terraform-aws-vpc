@@ -4,7 +4,7 @@ variable "enabled" {
 }
 
 variable "name" {
-  type = string
+  type    = string
   default = "main-vpc"
 }
 
@@ -37,7 +37,7 @@ variable "enable_dns_hostnames" {
   default = false
 }
 
-variable enable_classiclink {
+variable "enable_classiclink" {
   type    = bool
   default = false
 }
@@ -79,7 +79,7 @@ variable "dhcp_options_netbios_node_type" {
 }
 
 variable "single_nat_gateway" {
-  type = bool
+  type    = bool
   default = false
 }
 
@@ -96,6 +96,6 @@ variable "peers" {
 }
 
 variable "vpc_id" {
-  type = string
+  type    = string
   default = ""
 }
