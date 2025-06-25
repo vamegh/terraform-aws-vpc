@@ -37,16 +37,6 @@ variable "enable_dns_hostnames" {
   default = false
 }
 
-variable "enable_classiclink" {
-  type    = bool
-  default = false
-}
-
-variable "enable_classiclink_dns_support" {
-  type    = bool
-  default = false
-}
-
 variable "enable_dhcp_options" {
   type    = bool
   default = false
