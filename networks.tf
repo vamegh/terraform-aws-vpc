@@ -65,13 +65,13 @@ resource "aws_route_table" "public" {
     for_each = flatten([
       for subnet in local.public_subnets : [
         for route in subnet["routes"] :
-        route if contains(keys(route), "instance_id")
+        route if contains(keys(route), "network_interface_id")
       ]
     ])
 
     content {
       cidr_block  = route.value.cidr_block
-      instance_id = route.value.instance_id
+      network_interface_id = route.value.network_interface_id
     }
   }
 
@@ -152,13 +152,13 @@ resource "aws_route_table" "private" {
     for_each = flatten([
       for subnet in local.private_subnets : [
         for route in subnet["routes"] :
-        route if contains(keys(route), "instance_id")
+        route if contains(keys(route), "network_interface_id")
       ]
     ])
 
     content {
       cidr_block  = route.value.cidr_block
-      instance_id = route.value.instance_id
+      network_interface_id = route.value.network_interface_id
     }
   }
 
@@ -232,13 +232,13 @@ resource "aws_route_table" "internal" {
     for_each = flatten([
       for subnet in local.internal_subnets : [
         for route in subnet["routes"] :
-        route if contains(keys(route), "instance_id")
+        route if contains(keys(route), "network_interface_id")
       ]
     ])
 
     content {
       cidr_block  = route.value.cidr_block
-      instance_id = route.value.instance_id
+      network_interface_id = route.value.network_interface_id
     }
   }
 
@@ -317,13 +317,13 @@ resource "aws_route_table" "database" {
     for_each = flatten([
       for subnet in local.database_subnets : [
         for route in subnet["routes"] :
-        route if contains(keys(route), "instance_id")
+        route if contains(keys(route), "network_interface_id")
       ]
     ])
 
     content {
       cidr_block  = route.value.cidr_block
-      instance_id = route.value.instance_id
+      network_interface_id = route.value.network_interface_id
     }
   }
 
@@ -417,13 +417,13 @@ resource "aws_route_table" "redshift" {
     for_each = flatten([
       for subnet in local.redshift_subnets : [
         for route in subnet["routes"] :
-        route if contains(keys(route), "instance_id")
+        route if contains(keys(route), "network_interface_id")
       ]
     ])
 
     content {
       cidr_block  = route.value.cidr_block
-      instance_id = route.value.instance_id
+      network_interface_id = route.value.network_interface_id
     }
   }
 
